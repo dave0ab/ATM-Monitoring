@@ -1,0 +1,40 @@
+import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { RouterLink, RouterOutlet, RouterModule } from '@angular/router';
+
+interface ATM {
+  id: number;
+  branchId: number;
+  status: string;
+  location: string;
+  city: string;
+  region: string;
+  lastUpdated: string;
+}
+
+@Component({
+  selector: 'app-map-view',
+  standalone: true,
+  templateUrl: './mapview.component.html',
+  styleUrls: ['./mapview.component.scss'],
+
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSidenavModule,
+    MatProgressBarModule,
+    RouterLink,
+    RouterOutlet,
+    RouterModule,
+  ],
+})
+export class MapViewComponent {
+  @Input() atmData: ATM[] = [];
+}

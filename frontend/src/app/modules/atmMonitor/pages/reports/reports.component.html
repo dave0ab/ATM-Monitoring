@@ -1,0 +1,250 @@
+<!-- Main Container with Background -->
+<div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+  <!-- Header Section with Title and Description -->
+  <div class="mb-8">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">
+          ATM Status Dashboard
+        </h1>
+        <p class="text-gray-600">Real-time monitoring and reporting system</p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm text-gray-500">Last Updated</p>
+        <p class="text-lg font-semibold text-gray-700">
+          {{ currentDate | date : 'medium' }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Cards Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total ATMs -->
+    <div
+      class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 transform hover:scale-105 transition-transform duration-200"
+    >
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">
+            Total ATMs
+          </p>
+          <p class="text-3xl font-bold text-gray-800 mt-2">
+            {{ dataSource.data.length }}
+          </p>
+          <p class="text-xs text-gray-500 mt-2">All terminals in network</p>
+        </div>
+        <div class="p-4 bg-indigo-50 rounded-lg">
+          <mat-icon class="text-indigo-600 transform scale-150"
+            >account_balance</mat-icon
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Active ATMs -->
+    <div
+      class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 transform hover:scale-105 transition-transform duration-200"
+    >
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">
+            Active
+          </p>
+          <p class="text-3xl font-bold text-emerald-600 mt-2">
+            {{ (dataSource.data | filterByStatus : 'Active').length }}
+          </p>
+          <p class="text-xs text-gray-500 mt-2">Operational terminals</p>
+        </div>
+        <div class="p-4 bg-emerald-50 rounded-lg">
+          <mat-icon class="text-emerald-600 transform scale-150"
+            >check_circle</mat-icon
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Offline ATMs -->
+    <div
+      class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 transform hover:scale-105 transition-transform duration-200"
+    >
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">
+            Offline
+          </p>
+          <p class="text-3xl font-bold text-rose-600 mt-2">
+            {{ (dataSource.data | filterByStatus : 'Offline').length }}
+          </p>
+          <p class="text-xs text-gray-500 mt-2">Requires attention</p>
+        </div>
+        <div class="p-4 bg-rose-50 rounded-lg">
+          <mat-icon class="text-rose-600 transform scale-150"
+            >error_outline</mat-icon
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Unknown Status -->
+    <div
+      class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 transform hover:scale-105 transition-transform duration-200"
+    >
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">
+            Unknown
+          </p>
+          <p class="text-3xl font-bold text-amber-600 mt-2">
+            {{ (dataSource.data | filterByStatus : 'Unknown').length }}
+          </p>
+          <p class="text-xs text-gray-500 mt-2">Status unconfirmed</p>
+        </div>
+        <div class="p-4 bg-amber-50 rounded-lg">
+          <mat-icon class="text-amber-600 transform scale-150"
+            >help_outline</mat-icon
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Control Panel -->
+  <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+      <!-- Search Field -->
+      <div class="w-full md:w-1/3">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Search ATMs</mat-label>
+          <input
+            matInput
+            placeholder="Search by Terminal ID or Name"
+            [(ngModel)]="searchTerm"
+            (keyup)="applyFilters()"
+          />
+          <mat-icon matSuffix class="text-gray-400">search</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="w-full md:w-1/3">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Filter by Status</mat-label>
+          <mat-select
+            [(ngModel)]="statusFilter"
+            (selectionChange)="applyFilters()"
+          >
+            <mat-option value="">All Status</mat-option>
+            <mat-option value="Active">Active</mat-option>
+            <mat-option value="Offline">Offline</mat-option>
+            <mat-option value="Unknown">Unknown</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <!-- Export Button -->
+    </div>
+  </div>
+
+  <!-- Table Container -->
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <!-- Status Messages -->
+    <div
+      *ngIf="excelError$ | async as error"
+      class="p-4 bg-rose-50 border-l-4 border-rose-500 text-rose-700"
+    >
+      <div class="flex items-center gap-2">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ error }}</span>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <mat-table [dataSource]="dataSource" matSort class="w-full">
+      <!-- Terminal ID Column -->
+      <ng-container matColumnDef="terminalId">
+        <mat-header-cell
+          *matHeaderCellDef
+          mat-sort-header
+          class="bg-gray-50 font-semibold text-gray-600"
+        >
+          Terminal ID
+        </mat-header-cell>
+        <mat-cell *matCellDef="let atm" class="font-medium text-gray-900">
+          {{ atm.terminalId }}
+        </mat-cell>
+      </ng-container>
+
+      <!-- ATM Name Column -->
+      <ng-container matColumnDef="atmName">
+        <mat-header-cell
+          *matHeaderCellDef
+          mat-sort-header
+          class="bg-gray-50 font-semibold text-gray-600"
+        >
+          ATM Name
+        </mat-header-cell>
+        <mat-cell *matCellDef="let atm" class="text-gray-600">
+          {{ atm.atmName }}
+        </mat-cell>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <mat-header-cell
+          *matHeaderCellDef
+          mat-sort-header
+          class="bg-gray-50 font-semibold text-gray-600"
+        >
+          Status
+        </mat-header-cell>
+        <mat-cell *matCellDef="let atm">
+          <span
+            [ngClass]="{
+              'px-3 py-1 text-xs font-medium rounded-full flex items-center gap-1 w-fit': true,
+              'bg-emerald-100 text-emerald-800': atm.status === 'Active',
+              'bg-rose-100 text-rose-800': atm.status === 'Offline',
+              'bg-amber-100 text-amber-800': atm.status === 'Unknown'
+            }"
+          >
+            <span
+              class="w-2 h-2 rounded-full"
+              [ngClass]="{
+                'bg-emerald-500': atm.status === 'Active',
+                'bg-rose-500': atm.status === 'Offline',
+                'bg-amber-500': atm.status === 'Unknown'
+              }"
+            ></span>
+            {{ atm.status }}
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        class="hover:bg-gray-50 transition-colors duration-150"
+      >
+      </mat-row>
+    </mat-table>
+
+    <!-- Empty State -->
+    <div *ngIf="dataSource.data.length === 0" class="p-12 text-center">
+      <div
+        class="bg-gray-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4"
+      >
+        <mat-icon class="text-gray-400 transform scale-150">inbox</mat-icon>
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 mb-1">No ATMs Found</h3>
+      <p class="text-gray-500">Try adjusting your search criteria or filters</p>
+    </div>
+
+    <!-- Paginator -->
+    <mat-paginator
+      [pageSizeOptions]="[10, 25, 50, 100]"
+      showFirstLastButtons
+      class="border-t border-gray-100"
+    >
+    </mat-paginator>
+  </div>
+</div>

@@ -1,0 +1,481 @@
+<div class="container mx-auto px-4 py-8">
+  <!-- Error Alert -->
+  @if (error) {
+    <div
+      class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded"
+      >
+      {{ error }}
+    </div>
+  }
+
+  <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+    <div class="p-6 sm:p-10">
+      <div class="border-t border-gray-200">
+        <nav class="flex">
+          <button
+            (click)="setActiveTab('overview')"
+            [ngClass]="{
+              'border-rose-500 text-rose-600': activeTab === 'overview',
+              'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300':
+                activeTab !== 'overview'
+            }"
+            class="flex-1 py-4 px-1 text-center border-b-2 font-medium text-sm"
+            >
+            Overview
+          </button>
+
+          <button
+            (click)="setActiveTab('assign-ATMS')"
+            [ngClass]="{
+              'border-rose-500 text-rose-600': activeTab === 'assign-ATMS',
+              'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300':
+                activeTab !== 'assign-ATMS'
+            }"
+            class="flex-1 py-4 px-1 text-center border-b-2 font-medium text-sm"
+            >
+            Assign ATMS
+          </button>
+        </nav>
+      </div>
+
+      <div class="p-6 sm:p-10">
+        @if (activeTab === 'overview') {
+          <div class="space-y-6">
+            <div class="flex items-start space-x-6">
+              <div class="flex-shrink-0">
+                <div
+                  class="w-24 h-24 rounded-full bg-rose-100 flex items-center justify-center"
+                  >
+                  <span class="text-3xl font-bold text-rose-600">
+                    {{ getInitials(userProfile?.domainId || '') }}
+                  </span>
+                </div>
+              </div>
+              <div class="flex-1">
+                <h3 class="text-xl font-semibold text-gray-800">
+                  {{ userProfile?.domainId || 'N/A' }}
+                </h3>
+                <p class="text-gray-600">{{ userProfile?.role || 'N/A' }}</p>
+                <p class="text-sm text-gray-500 mt-1">
+                  Status: {{ userProfile?.status || 'N/A' }}
+                </p>
+              </div>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="text-lg font-medium text-gray-800 mb-3">
+                Account Details
+              </h4>
+              <div class="space-y-2">
+                <div class="flex items-center text-gray-600">
+                  <mat-icon class="text-gray-400 mr-2">notifications</mat-icon>
+                  <span
+                    >Notification Level:
+                    {{ userProfile?.notificationLevel || 'N/A' }}</span
+                    >
+                  </div>
+                  <div class="flex items-center text-gray-600">
+                    <mat-icon class="text-gray-400 mr-2">calendar_today</mat-icon>
+                    <span
+                      >Created:
+                      {{
+                      userProfile?.createdAt
+                      ? (userProfile?.createdAt | date : 'medium')
+                      : 'N/A'
+                      }}</span
+                      >
+                    </div>
+                    <div class="flex items-center text-gray-600">
+                      <mat-icon class="text-gray-400 mr-2">login</mat-icon>
+                      <span
+                        >Last Login:
+                        {{
+                        userProfile?.lastSignOn
+                        ? (userProfile?.lastSignOn | date : 'medium')
+                        : 'N/A'
+                        }}</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              @if (activeTab === 'assign-ATMS') {
+                <div class="space-y-6">
+                  <h3 class="text-2xl font-semibold mb-4 text-gray-800">ATMS</h3>
+                  <!-- Loading indicator -->
+                  @if (atmAccessLoading$ | async) {
+                    <div
+                      class="flex justify-center items-center py-4"
+                      >
+                      <mat-spinner diameter="40"></mat-spinner>
+                      <span class="ml-2">Saving ATM assignments...</span>
+                    </div>
+                  }
+                  <!-- Error message -->
+                  @if (atmAccessError$ | async; as error) {
+                    <app-alert-error
+                      [message]="error"
+                      class="mb-4"
+                    ></app-alert-error>
+                  }
+                  <!-- Success message -->
+                  <!-- Table controls -->
+                  <div class="flex justify-between items-center mb-4">
+                    <div class="relative w-64">
+                      <input
+                        type="text"
+                        placeholder="Search ATMs..."
+                        (input)="applyFilter($event)"
+                        class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        />
+                      <div
+                        class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+                        >
+                        <svg
+                          class="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                        </svg>
+                      </div>
+                    </div>
+                    @if (hasChanges) {
+                      <button
+                        (click)="confirmSave()"
+                        [disabled]="atmAccessLoading$ | async"
+                        class="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors duration-200 flex items-center gap-2"
+                        >
+                        <mat-icon>save</mat-icon>
+                        {{ (atmAccessLoading$ | async) ? 'Saving...' : 'Save Changes' }}
+                      </button>
+                    }
+                  </div>
+                  <div class="flex flex-col mt-6">
+                    <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                      <div
+                        class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8"
+                        >
+                        <div
+                          class="overflow-hidden border rounded-xl border-gray-200 dark:border-gray-700 md:rounded-lg"
+                          >
+                          @if (error$ | async; as error) {
+                            <app-alert-error
+                              [message]="error"
+                              class="mt-3"
+                            ></app-alert-error>
+                          }
+                          @if (isStopedLoading) {
+                            <mat-progress-bar
+                              mode="query"
+                              color="warn"
+                            ></mat-progress-bar>
+                          }
+                          <table
+                            mat-table
+                            [dataSource]="dataSource"
+                            class="mat-elevation-z8 rounded-xl"
+                            matSort
+                            >
+                            <!-- Checkbox Column -->
+                            <ng-container matColumnDef="select">
+                              <th
+                                mat-header-cell
+                                *matHeaderCellDef
+                                [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                                >
+                                <mat-checkbox
+                                  (change)="$event ? masterToggle() : null"
+                                  [checked]="selection.hasValue() && isAllSelected()"
+                          [indeterminate]="
+                            selection.hasValue() && !isAllSelected()
+                          "
+                                  [aria-label]="checkboxLabel()"
+                                  >
+                                </mat-checkbox>
+                              </th>
+                              <td mat-cell *matCellDef="let row">
+                                <mat-checkbox
+                                  (click)="$event.stopPropagation()"
+                                  (change)="toggleSelection(row)"
+                                  [checked]="selection.isSelected(row)"
+                                  [aria-label]="checkboxLabel(row)"
+                                  >
+                                </mat-checkbox>
+                              </td>
+                            </ng-container>
+                            <!-- ATM ID Column -->
+                            <ng-container matColumnDef="atmId">
+                              <th
+                                mat-header-cell
+                                *matHeaderCellDef
+                                (click)="onHeaderClick('atmId')"
+                                [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                                >
+                                <div class="flex items-center gap-1">
+                                  ATM ID
+                                  <span class="material-icons text-gray-400 text-sm"
+                                    >unfold_more</span
+                                    >
+                                  </div>
+                                </th>
+                                <td
+                                  mat-cell
+                                  *matCellDef="let atm"
+                                  (click)="onRowClick(atm)"
+                                  >
+                                  {{ atm.atmId }}
+                                </td>
+                              </ng-container>
+                              <!-- ATM Name Column -->
+                              <ng-container matColumnDef="atmName">
+                                <th
+                                  mat-header-cell
+                                  *matHeaderCellDef
+                                  (click)="onHeaderClick('atmName')"
+                                  [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                                  >
+                                  <div class="flex items-center gap-1">
+                                    ATM Name
+                                    <span class="material-icons text-gray-400 text-sm"
+                                      >unfold_more</span
+                                      >
+                                    </div>
+                                  </th>
+                                  <td
+                                    mat-cell
+                                    *matCellDef="let atm"
+                                    (click)="onRowClick(atm)"
+                                    >
+                                    {{ atm.atmName }}
+                                  </td>
+                                </ng-container>
+                                <!-- Region Name Column
+                                <ng-container matColumnDef="atmIp">
+                                  <th
+                                    mat-header-cell
+                                    *matHeaderCellDef
+                                    (click)="onHeaderClick('atmIp')"
+                                    [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                                    >
+                                    <div class="flex items-center gap-1">
+                                      Atm IP
+                                      <span class="material-icons text-gray-400 text-sm"
+                                        >unfold_more</span
+                                        >
+                                      </div>
+                                    </th>
+                                    <td mat-cell *matCellDef="let atm" (click)="onRowClick(atm)">
+                                      {{ atm.atmIP }}
+                                    </td>
+                                  </ng-container> -->
+                                  <!-- Operational State Description Column -->
+                                  <ng-container matColumnDef="actualOpStateDesc">
+                                    <th
+                                      mat-header-cell
+                                      *matHeaderCellDef
+                                      (click)="onHeaderClick('actualopstate')"
+                                      [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                                      >
+                                      <div class="flex items-center gap-1">
+                                        Operational Status
+                                        <span class="material-icons text-gray-400 text-sm"
+                                          >unfold_more</span
+                                          >
+                                        </div>
+                                      </th>
+                                      <td
+                                        mat-cell
+                                        *matCellDef="let atm"
+                                        (click)="onRowClick(atm)"
+                                        >
+                                        {{ atm.actualOpStateDesc
+                                        }}{{
+                                        atm.actualOpStateDesc === 'Closed'
+                                        ? ' (Daily Service)'
+                                        : ''
+                                        }}
+                                      </td>
+                                    </ng-container>
+                                    <!-- Communication State Description Column -->
+                                    <ng-container matColumnDef="commStateDesc">
+                                      <th
+                                        mat-header-cell
+                                        *matHeaderCellDef
+                                        (click)="onHeaderClick('commsstate')"
+                                        class="items-center justify-center centered-cell"
+                                        [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                                        >
+                                        <div class="flex items-center gap-1">
+                                          Communication State
+                                          <span class="material-icons text-gray-400 text-sm"
+                                            >unfold_more</span
+                                            >
+                                          </div>
+                                        </th>
+                                        <td
+                                          mat-cell
+                                          matSort
+                                          *matCellDef="let atm"
+                                          (click)="onRowClick(atm)"
+                                          class="px-6 py-4 whitespace-nowrap items-center justify-center centered-cell"
+                                          >
+                                          <span
+                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                          [ngClass]="{
+                            'bg-green-100 text-green-800':
+                              atm.commStateDesc === 'Online',
+                            'bg-red-100 text-red-800':
+                              atm.commStateDesc === 'Offline'
+                          }"
+                                            >
+                                            @if (atm.commStateDesc === 'Online') {
+                                              <span
+                                                class="material-icons mr-1"
+                                                >check_circle</span
+                                                >
+                                              }
+                                              @if (atm.commStateDesc === 'Offline') {
+                                                <span
+                                                  class="material-icons mr-1"
+                                                  >cancel</span
+                                                  >
+                                                }
+                                                {{
+                                                atm.commStateDesc === 'Online'
+                                                ? 'Online'
+                                                : atm.commStateDesc === 'Offline'
+                                                ? 'Offline'
+                                                : 'Undefined'
+                                                }}
+                                              </span>
+                                            </td>
+                                          </ng-container>
+                                          <!-- Critical Failure Column -->
+                                          <ng-container matColumnDef="problem">
+                                            <th
+                                              mat-header-cell
+                                              *matHeaderCellDef
+                                              (click)="onHeaderClick('deviceName')"
+                                              class="items-center justify-center centered-cell"
+                                              [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                                              >
+                                              <div class="flex items-center gap-1">
+                                                Problem
+                                                <span class="material-icons text-gray-400 text-sm"
+                                                  >unfold_more</span
+                                                  >
+                                                </div>
+                                              </th>
+                                              <td
+                                                mat-cell
+                                                *matCellDef="let atm"
+                                                matSort
+                                                (click)="onRowClick(atm)"
+                                                class="px-6 py-4 whitespace-nowrap items-center justify-center centered-cell"
+                                                >
+                                                <span
+                                                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                          [ngClass]="{
+                            'bg-red-100 text-red-800': [
+                              'Cash Dispenser',
+                              'EPP',
+                              'Magnetic Card Reader'
+                            ].includes(atm.deviceName),
+                            'bg-yellow-100 text-yellow-800': ![
+                              'Cash Dispenser',
+                              'EPP',
+                              'Magnetic Card Reader'
+                            ].includes(atm.deviceName)
+                          }"
+                                                  >
+                                                  {{ atm.deviceName }}
+                                                </span>
+                                              </td>
+                                            </ng-container>
+                                            <!-- Branch Name Column -->
+                                            <ng-container matColumnDef="lastTransaction">
+                                              <th
+                                                mat-header-cell
+                                                *matHeaderCellDef
+                                                (click)="onHeaderClick('successtxnlastupdate')"
+                                                [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                                                >
+                                                <div class="flex items-center gap-1">
+                                                  Last Transaction
+                                                  <span class="material-icons text-gray-400 text-sm"
+                                                    >unfold_more</span
+                                                    >
+                                                  </div>
+                                                </th>
+                                                <td
+                                                  mat-cell
+                                                  *matCellDef="let atm"
+                                                  (click)="onRowClick(atm)"
+                                                  matSort
+                                                  >
+                                                  {{ atm.successTxnLastUpdate | date }}
+                                                </td>
+                                              </ng-container>
+                                              <ng-container matColumnDef="pingStatus">
+                                                <th
+                                                  mat-header-cell
+                                                  *matHeaderCellDef
+                                                  (click)="onHeaderClick('pingStatus')"
+                                                  [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                                                  >
+                                                  <div class="flex items-center gap-1">
+                                                    Ping Status
+                                                    <span class="material-icons text-gray-400 text-sm"
+                                                      >unfold_more</span
+                                                      >
+                                                    </div>
+                                                  </th>
+                                                  <td
+                                                    mat-cell
+                                                    *matCellDef="let atm"
+                                                    (click)="onRowClick(atm)"
+                                                    matSort
+                                                    >
+                                                    {{ atm.pingStatus }}
+                                                  </td>
+                                                </ng-container>
+                                                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                                                <tr
+                                                  mat-row
+                                                  *matRowDef="let row; columns: displayedColumns"
+                                                ></tr>
+                                              </table>
+                                              @if (dataSource.data.length === 0) {
+                                                <div
+                                                  class="flex items-center justify-center h-32 bg-gray-50 text-gray-500 text-lg font-medium"
+                                                  >
+                                                  No data available
+                                                </div>
+                                              }
+                                              <mat-paginator
+                                                [length]="count"
+                                                [pageSize]="pageSize"
+                                                [pageSizeOptions]="[5, 10, 20, 50, 100, 250, 500]"
+                                                [pageIndex]="currentPage - 1"
+                                                (page)="onPageChange($event)"
+                                                showFirstLastButtons
+                                                class="mt-4"
+                                              ></mat-paginator>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  }
+                                </div>
+                              </div>
+                            </div>
+                          </div>

@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import '~material-icons/iconfont/material-icons.css';
+@import '~material-icons/iconfont/filled.css';
+@import '~material-icons/iconfont/outlined.css';
+
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Poppins, 'Poppins', sans-serif;
+}
+
+@layer components {
+  .dropdown-content {
+    @apply pointer-events-none scale-95 opacity-0 duration-100 ease-in;
+  }
+
+  .dropdown:hover > .dropdown-content {
+    @apply pointer-events-auto block scale-100 animate-fade-in-up opacity-100 duration-200;
+  }
+
+  .dropdown-content {
+    @apply pointer-events-none scale-95 opacity-0 duration-100 ease-in;
+  }
+
+  .dropdown:hover > .dropdown-content {
+    @apply pointer-events-auto block scale-100 animate-fade-in-up opacity-100 duration-200;
+  }
+  .animate-fade-in-up {
+    @apply transition ease-in-out duration-300 transform translate-y-0;
+    animation: fadeInUp 0.3s ease-in-out forwards;
+  }
+}
+
+// Define custom animation class
+
+// Define the keyframes for fade-in-up animation
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+::ng-deep .mat-step-header .mat-step-icon {
+  @apply bg-gray-300 text-gray-500;
+}
+
+::ng-deep .mat-step-header.mat-active .mat-step-icon {
+  @apply bg-rose-600 text-white;
+}
+
+::ng-deep .mat-step-header:hover .mat-step-icon {
+  @apply bg-pink-200 text-rose-600;
+}
+
+::ng-deep .daterangepicker .applyBtn,
+::ng-deep .drp-buttons .applyBtn {
+  background-color: #e11d48 !important; /* Tailwind's rose-600 (#e11d48) */
+  color: white !important;
+  border: none !important;
+  font-family: 'Poppins', sans-serif !important; /* Font customization */
+}
+
+/* Change the hover effect for the OK button */
+::ng-deep .daterangepicker .applyBtn:hover,
+::ng-deep .drp-buttons .applyBtn:hover {
+  background-color: #be123c !important; /* Darker rose color for hover */
+  color: white !important;
+}

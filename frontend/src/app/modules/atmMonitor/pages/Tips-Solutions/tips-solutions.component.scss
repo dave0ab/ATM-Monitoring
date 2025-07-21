@@ -1,0 +1,11 @@
+/* Add any additional custom styles here */
+.container {
+  max-width: 800px;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}

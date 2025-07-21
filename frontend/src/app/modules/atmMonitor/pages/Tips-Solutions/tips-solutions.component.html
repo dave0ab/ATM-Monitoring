@@ -1,0 +1,302 @@
+<div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+  <!-- Header -->
+  <header class="mb-8 text-center">
+    <h1 class="text-4xl font-extrabold text-rose-600 mb-4">
+      Tips and Solutions for ATM Monitoring
+    </h1>
+    <p class="text-gray-500 mb-6">
+      Find helpful FAQs, tips, and solutions for effective ATM monitoring.
+    </p>
+    <input
+      [(ngModel)]="searchTerm"
+      placeholder="Search tips, solutions, and FAQs..."
+      class="w-full max-w-lg px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-600"
+      />
+  </header>
+
+  <!-- Add New Tip Button - Only show for admin -->
+  @if (isAdmin) {
+    <div class="text-right mb-6">
+      <button
+        (click)="openAddModal()"
+        class="bg-rose-600 text-white px-6 py-3 rounded-lg shadow hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-600"
+        >
+        + Add New Tip
+      </button>
+    </div>
+  }
+
+  <!-- FAQs Section -->
+  <section class="mb-12">
+    <h2 class="text-3xl font-bold text-gray-800 mb-4 border-b pb-2">
+      Frequently Asked Questions
+    </h2>
+    @for (faq of getFilteredTips('FAQ') | async | filter : searchTerm; track faq) {
+      <div
+        class="bg-white rounded-lg shadow-md overflow-hidden mb-4"
+        >
+        <div
+          (click)="toggleItem(faq)"
+          class="px-6 py-4 cursor-pointer flex justify-between items-center hover:bg-gray-50"
+          >
+          <h3 class="font-medium text-gray-700">{{ faq.title }}</h3>
+          <svg
+            class="w-5 h-5 transform transition-transform duration-200"
+            [class.rotate-180]="faq.isOpen"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+              />
+          </svg>
+        </div>
+        @if (faq.isOpen) {
+          <div class="px-6 py-4 bg-gray-50">
+            <p class="text-gray-600">{{ faq.details }}</p>
+            <div class="mt-4 flex justify-between items-center">
+              <span class="text-sm text-gray-500"
+                >Created: {{ faq.createdDate | date }}</span
+                >
+                @if (isAdmin) {
+                  <div class="flex space-x-2">
+                    <button
+                      (click)="editTip(faq)"
+                      class="text-rose-600 hover:text-rose-700"
+                      >
+                      <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                      </svg>
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- Tips Section -->
+    <section class="mb-12">
+      <h2 class="text-3xl font-bold text-gray-800 mb-4 border-b pb-2">Tips</h2>
+      @for (tip of getFilteredTips('TIPS') | async | filter : searchTerm; track tip) {
+        <div
+          class="bg-white rounded-lg shadow-md overflow-hidden mb-4"
+          >
+          <div
+            (click)="toggleItem(tip)"
+            class="px-6 py-4 cursor-pointer flex justify-between items-center hover:bg-gray-50"
+            >
+            <h3 class="font-medium text-gray-700">{{ tip.title }}</h3>
+            <svg
+              class="w-5 h-5 transform transition-transform duration-200"
+              [class.rotate-180]="tip.isOpen"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+                />
+            </svg>
+          </div>
+          @if (tip.isOpen) {
+            <div class="px-6 py-4 bg-gray-50">
+              <p class="text-gray-600">{{ tip.details }}</p>
+              <div class="mt-4 flex justify-between items-center">
+                <span class="text-sm text-gray-500"
+                  >Created: {{ tip.createdDate | date }}</span
+                  >
+                  @if (isAdmin) {
+                    <div class="flex space-x-2">
+                      <button
+                        (click)="editTip(tip)"
+                        class="text-rose-600 hover:text-rose-700"
+                        >
+                        <svg
+                          class="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                        </svg>
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Solutions Section -->
+      <section class="mb-12">
+        <h2 class="text-3xl font-bold text-gray-800 mb-4 border-b pb-2">
+          Solutions
+        </h2>
+        @for (
+          solution of getFilteredTips('SOLUTIONS')
+          | async
+          | filter : searchTerm
+          ; track
+          solution) {
+          <div
+            class="bg-white rounded-lg shadow-md overflow-hidden mb-4"
+            >
+            <div
+              (click)="toggleItem(solution)"
+              class="px-6 py-4 cursor-pointer flex justify-between items-center hover:bg-gray-50"
+              >
+              <h3 class="font-medium text-gray-700">{{ solution.title }}</h3>
+              <svg
+                class="w-5 h-5 transform"
+                [class.rotate-180]="solution.isOpen"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                  />
+              </svg>
+            </div>
+            @if (solution.isOpen) {
+              <div class="px-6 py-4 bg-gray-50">
+                <p class="text-gray-600">{{ solution.details }}</p>
+                <div class="mt-4 flex justify-between items-center">
+                  <span class="text-sm text-gray-500"
+                    >Created: {{ solution.createdDate | date }}</span
+                    >
+                    @if (isAdmin) {
+                      <div class="flex space-x-2">
+                        <button
+                          (click)="editTip(solution)"
+                          class="text-rose-600 hover:text-rose-700"
+                          >
+                          <svg
+                            class="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                          </svg>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        <!-- Add Tip Modal -->
+        @if (showAddModal) {
+          <div
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+            >
+            <div class="bg-white p-8 rounded-lg w-full max-w-lg shadow-lg">
+              <h2 class="text-2xl font-bold mb-6">
+                {{ editingTip ? 'Edit' : 'Add New' }} Tip
+              </h2>
+              <form [formGroup]="tipForm" (ngSubmit)="submitTip()">
+                <div class="mb-4">
+                  <label class="block mb-2 font-semibold">Category</label>
+                  <select
+                    formControlName="category"
+                    class="w-full px-4 py-2 border rounded"
+                    >
+                    <option value="FAQ">FAQ</option>
+                    <option value="SOLUTIONS">SOLUTIONS</option>
+                    <option value="TIPS">TIPS</option>
+                  </select>
+                </div>
+                <div class="mb-4">
+                  <label class="block mb-2 font-semibold">Title</label>
+                  <input
+                    formControlName="title"
+                    type="text"
+                    class="w-full px-4 py-2 border rounded"
+                    />
+                </div>
+                <div class="mb-4">
+                  <label class="block mb-2 font-semibold">Details</label>
+                  <textarea
+                    formControlName="details"
+                    class="w-full px-4 py-2 border rounded"
+                    rows="4"
+                  ></textarea>
+                </div>
+                <div class="mb-4">
+                  <label class="block mb-2 font-semibold">Roles</label>
+                  <div class="space-y-2">
+                    @for (role of roles; track role) {
+                      <div class="flex items-center">
+                        <input
+                          type="checkbox"
+                          [id]="role.name"
+                          [checked]="role.checked"
+                          (change)="toggleRole(role)"
+                          class="h-4 w-4 text-rose-600 rounded border-gray-300"
+                          />
+                        <label [for]="role.name" class="ml-2 text-gray-700">
+                          {{ role.name }}
+                        </label>
+                      </div>
+                    }
+                  </div>
+                </div>
+                <div class="flex justify-end mt-6">
+                  <button
+                    type="button"
+                    (click)="closeAddModal()"
+                    class="px-6 py-2 bg-gray-200 rounded-lg"
+                    >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    class="ml-2 px-6 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-600"
+                    >
+                    Save
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        }
+      </div>

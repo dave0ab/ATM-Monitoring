@@ -1,0 +1,477 @@
+<div class="bg-gray-100">
+  <h1 class="text-3xl font-bold mb-8 text-gray-800 flex items-center space-x-2">
+    <span class="material-icons text-rose-500">monitor_heart</span>
+    <span>Server Gateway Monitor</span>
+  </h1>
+
+  @if (loading$ | async) {
+    <div class="text-center py-4">
+      <span class="material-icons animate-spin">refresh</span>
+      Loading...
+    </div>
+  }
+
+  @if (gateways.length === 0) {
+    <div class="text-center py-4 text-gray-500">
+      No gateway servers found.
+    </div>
+  }
+
+  @if (gateways.length > 0) {
+    <div
+      class="bg-white rounded-xl shadow-lg overflow-hidden"
+      >
+      <div class="overflow-y-auto overflow-x-auto max-h-[100vh]">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                <span class="material-icons text-gray-400 mr-1">dns</span>
+                Server
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                <span class="material-icons text-gray-400 mr-1"
+                  >signal_cellular_alt</span
+                  >
+                  Status
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                  <span class="material-icons text-gray-400 mr-1"
+                    >network_check</span
+                    >
+                    Prefix
+                  </th>
+                  <!-- New Column: Server IP -->
+                  <!-- New Column: Port -->
+                  <!-- New Column: Comms -->
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                    <span class="material-icons text-gray-400 mr-1"
+                      >compare_arrows</span
+                      >
+                      Comms
+                    </th>
+                    <!-- New Column: Local Status -->
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                      <span class="material-icons text-gray-400 mr-1">location_on</span>
+                      Local Status
+                    </th>
+                    <!-- New Column: Remote Status -->
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                      <span class="material-icons text-gray-400 mr-1">router</span>
+                      Remote Status
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                      <span class="material-icons text-gray-400 mr-1">access_time</span>
+                      Uptime
+                    </th>
+                    <th
+                      class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  @for (gateway of gateways; track gateway) {
+                    <tr
+                      class="hover:bg-gray-50 transition-colors duration-200"
+                      >
+                      @if (gateway) {
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center">
+                            <span class="material-icons text-gray-500 mr-2">storage</span>
+                            <div>
+                              <div class="text-sm font-medium text-gray-900">
+                                {{ gateway?.serverName || 'N/A' }}
+                              </div>
+                              <div class="text-sm text-gray-500">
+                                {{ gateway?.systemId || 'N/A' }}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  [ngClass]="{
+                    'bg-green-100 text-green-800':
+                      gateway?.actualStat === 'Online',
+                    'bg-red-100 text-red-800':
+                      gateway?.actualStat === 'Offline',
+                    'bg-yellow-100 text-yellow-800':
+                      gateway?.actualStat === 'Maintenance',
+                    'bg-rose-200 text-rose-600':
+                      gateway?.actualStat === 'Sign OFF',
+                    'bg-purple-100 text-purple-800':
+                      gateway?.actualStat === 'Undefined'
+                  }"
+                            >
+                            @if (gateway?.actualStat === 'Online') {
+                              <span
+                                class="material-icons mr-1"
+                                >check_circle</span
+                                >
+                              }
+                              @if (gateway?.actualStat === 'Offline') {
+                                <span
+                                  class="material-icons mr-1"
+                                  >cancel</span
+                                  >
+                                }
+                                @if (gateway?.actualStat === 'Maintenance') {
+                                  <span
+                                    class="material-icons mr-1"
+                                    >build</span
+                                    >
+                                  }
+                                  @if (gateway?.actualStat === 'Sign OFF') {
+                                    <span
+                                      class="material-icons mr-1"
+                                      >exit_to_app</span
+                                      >
+                                    }
+                                    @if (gateway?.actualStat === 'Undefined') {
+                                      <span
+                                        class="material-icons mr-1"
+                                        >error_outline</span
+                                        >
+                                      }
+                                      {{
+                                      gateway?.actualStat === 'Online'
+                                      ? 'Online'
+                                      : gateway?.actualStat === 'Offline'
+                                      ? 'Offline'
+                                      : gateway?.actualStat === 'Maintenance'
+                                      ? 'Maintenance'
+                                      : gateway?.actualStat === 'Sign OFF'
+                                      ? 'Sign OFF'
+                                      : 'Undefined'
+                                      }}
+                                    </span>
+                                  </td>
+                                  <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                      <span class="material-icons text-gray-500 mr-2">wifi</span>
+                                      <span class="text-sm text-gray-900">{{
+                                        gateway.network
+                                      }}</span>
+                                    </div>
+                                  </td>
+                                  <td class="px-6 py-4 whitespace-nowrap">
+                                    <span
+                                      class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  [ngClass]="{
+                    'bg-green-100 text-green-800':
+                      gateway?.commsStatus === 'Online',
+                    'bg-red-100 text-red-800':
+                      gateway?.commsStatus === 'Offline',
+                    'bg-yellow-100 text-yellow-800':
+                      gateway?.commsStatus === 'Maintenance',
+                    'bg-rose-200 text-rose-600':
+                      gateway?.commsStatus === 'Unknown',
+                    'bg-rose-200 text-purple-800':
+                      gateway?.commsStatus === 'Undefined'
+                  }"
+                                      >
+                                      @if (gateway?.commsStatus === 'Online') {
+                                        <span
+                                          class="material-icons mr-1"
+                                          >check_circle</span
+                                          >
+                                        }
+                                        @if (gateway?.commsStatus === 'Offline') {
+                                          <span
+                                            class="material-icons mr-1"
+                                            >cancel</span
+                                            >
+                                          }
+                                          @if (gateway?.commsStatus === 'Maintenance') {
+                                            <span
+                                              class="material-icons mr-1"
+                                              >build</span
+                                              >
+                                            }
+                                            @if (gateway?.commsStatus === 'Unknown') {
+                                              <span
+                                                class="material-icons mr-1"
+                                                >help_outline</span
+                                                >
+                                              }
+                                              @if (gateway?.commsStatus === 'Undefined') {
+                                                <span
+                                                  class="material-icons mr-1"
+                                                  >error_outline</span
+                                                  >
+                                                }
+                                                {{
+                                                gateway?.commsStatus === 'Online'
+                                                ? 'Online'
+                                                : gateway?.commsStatus === 'Offline'
+                                                ? 'Offline'
+                                                : gateway?.commsStatus === 'Maintenance'
+                                                ? 'Maintenance'
+                                                : gateway?.commsStatus === 'Unknown'
+                                                ? 'Unknown'
+                                                : 'Undefined'
+                                                }}
+                                              </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                              <span
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  [ngClass]="{
+                    'bg-green-100 text-green-800':
+                      gateway?.locDesStat === 'Online',
+                    'bg-red-100 text-red-800':
+                      gateway?.locDesStat === 'Offline',
+                    'bg-yellow-100 text-yellow-800':
+                      gateway?.locDesStat === 'Maintenance',
+                    'bg-rose-200 text-rose-600':
+                      gateway?.locDesStat === 'Unknown',
+                    'bg-rose-200  text-rose-600':
+                      gateway?.locDesStat === 'Undefined'
+                  }"
+                                                >
+                                                @if (gateway?.locDesStat === 'Online') {
+                                                  <span
+                                                    class="material-icons mr-1"
+                                                    >check_circle</span
+                                                    >
+                                                  }
+                                                  @if (gateway?.locDesStat === 'Offline') {
+                                                    <span
+                                                      class="material-icons mr-1"
+                                                      >cancel</span
+                                                      >
+                                                    }
+                                                    @if (gateway?.locDesStat === 'Maintenance') {
+                                                      <span
+                                                        class="material-icons mr-1"
+                                                        >build</span
+                                                        >
+                                                      }
+                                                      @if (gateway?.locDesStat === 'Unknown') {
+                                                        <span
+                                                          class="material-icons mr-1"
+                                                          >help_outline</span
+                                                          >
+                                                        }
+                                                        @if (gateway?.locDesStat === 'Undefined') {
+                                                          <span
+                                                            class="material-icons mr-1"
+                                                            >error_outline</span
+                                                            >
+                                                          }
+                                                          {{
+                                                          gateway?.locDesStat === 'Online'
+                                                          ? 'Sign ON'
+                                                          : gateway?.locDesStat === 'Offline'
+                                                          ? 'Sign OFF'
+                                                          : gateway?.locDesStat === 'Maintenance'
+                                                          ? 'Sign OFF'
+                                                          : gateway?.locDesStat === 'Unknown'
+                                                          ? 'Sign OFF'
+                                                          : 'Sign OFF'
+                                                          }}
+                                                        </span>
+                                                      </td>
+                                                      <td class="px-6 py-4 whitespace-nowrap">
+                                                        <span
+                                                          class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  [ngClass]="
+                    gateway?.remDesSon === 'Online'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                  "
+                                                          >
+                                                          @if (gateway?.remDesSon === 'Online') {
+                                                            <span
+                                                              class="material-icons mr-1"
+                                                              >check_circle</span
+                                                              >
+                                                            }
+                                                            @if (gateway?.remDesSon === 'Offline') {
+                                                              <span
+                                                                class="material-icons mr-1"
+                                                                >cancel</span
+                                                                >
+                                                              }
+                                                              @if (gateway?.remDesSon === 'Maintenance') {
+                                                                <span
+                                                                  class="material-icons mr-1"
+                                                                  >build</span
+                                                                  >
+                                                                }
+                                                                @if (gateway?.remDesSon === 'Unknown') {
+                                                                  <span
+                                                                    class="material-icons mr-1"
+                                                                    >help_outline</span
+                                                                    >
+                                                                  }
+                                                                  @if (gateway?.remDesSon === 'Undefined') {
+                                                                    <span
+                                                                      class="material-icons mr-1"
+                                                                      >error_outline</span
+                                                                      >
+                                                                    }
+                                                                    {{
+                                                                    gateway?.remDesSon === 'Online'
+                                                                    ? 'Sign ON'
+                                                                    : gateway?.remDesSon === 'Offline'
+                                                                    ? 'Sign OFF'
+                                                                    : gateway?.remDesSon === 'Maintenance'
+                                                                    ? 'Sign OFF'
+                                                                    : gateway?.remDesSon === 'Unknown'
+                                                                    ? 'Sign OFF'
+                                                                    : 'Sign OFF'
+                                                                    }}
+                                                                  </span>
+                                                                </td>
+                                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                                  <div class="flex items-center">
+                                                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                                                      <div
+                                                                        class="bg-rose-600 h-2.5 rounded-full"
+                                                                        [style.width.%]="gateway.uptimePercentage"
+                                                                      ></div>
+                                                                    </div>
+                                                                    <span class="ml-2 text-sm text-gray-600"
+                                                                      >{{ gateway.uptimePercentage | number : '1.0-2' }}%</span
+                                                                      >
+                                                                    </div>
+                                                                  </td>
+                                                                  <td
+                                                                    class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                                                                    >
+                                                                    <button
+                                                                      (click)="openModal(gateway)"
+                                                                      class="text-rose-600 hover:text-rose-900 flex items-center space-x-1"
+                                                                      >
+                                                                      <span class="material-icons">visibility</span>
+                                                                      <span>Details</span>
+                                                                    </button>
+                                                                  </td>
+                                                                }
+                                                              </tr>
+                                                            }
+                                                          </tbody>
+                                                        </table>
+                                                      </div>
+                                                    </div>
+                                                  }
+                                                </div>
+
+                                                <!-- Modal -->
+                                                @if (selectedGateway) {
+                                                  <div
+                                                    class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center"
+                                                    (click)="closeModal()"
+                                                    >
+                                                    <div
+                                                      class="relative bg-white rounded-lg shadow-xl max-w-lg w-full m-4"
+                                                      (click)="$event.stopPropagation()"
+                                                      >
+                                                      <div class="p-6">
+                                                        <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">
+                                                          {{ selectedGateway.serverName }} Details
+                                                        </h3>
+                                                        <!-- Scrollable container for details -->
+                                                        <div class="max-h-[300px] overflow-y-auto">
+                                                          <!-- Adjust max height as needed -->
+                                                          <div class="grid grid-cols-2 gap-4">
+                                                            <div>
+                                                              <p class="text-sm font-medium text-gray-500">System ID</p>
+                                                              <p class="mt-1 text-sm text-gray-900">
+                                                                {{ selectedGateway.systemId }}
+                                                              </p>
+                                                            </div>
+                                                            <div>
+                                                              <p class="text-sm font-medium text-gray-500">Status</p>
+                                                              <p class="mt-1 text-sm text-gray-900">
+                                                                <span
+                [ngClass]="{
+                  'text-green-600': selectedGateway.actualStat === 'Online',
+                  'text-red-600': selectedGateway.actualStat === 'Offline',
+                  'text-yellow-600':
+                    selectedGateway.actualStat === 'Maintenance',
+                  'text-gray-600': selectedGateway.actualStat === 'Sign OFF',
+                  'text-purple-600': selectedGateway.actualStat === 'Undefined'
+                }"
+                                                                  >
+                                                                  {{ selectedGateway.actualStat }}
+                                                                </span>
+                                                              </p>
+                                                            </div>
+                                                            <div>
+                                                              <p class="text-sm font-medium text-gray-500">IP Address</p>
+                                                              <p class="mt-1 text-sm text-gray-900">
+                                                                {{ selectedGateway.serverAddr }}
+                                                              </p>
+                                                            </div>
+                                                            <div>
+                                                              <p class="text-sm font-medium text-gray-500">Port</p>
+                                                              <p class="mt-1 text-sm text-gray-900">
+                                                                {{ selectedGateway.serverPort }}
+                                                              </p>
+                                                            </div>
+                                                            <div>
+                                                              <p class="text-sm font-medium text-gray-500">Network</p>
+                                                              <p class="mt-1 text-sm text-gray-900">
+                                                                {{ selectedGateway.network }}
+                                                              </p>
+                                                            </div>
+                                                            <div>
+                                                              <p class="text-sm font-medium text-gray-500">Uptime</p>
+                                                              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                                                <div
+                                                                  class="bg-rose-600 h-2.5 rounded-full"
+                                                                  [style.width.%]="selectedGateway.uptimePercentage"
+                                                                ></div>
+                                                              </div>
+                                                              <span class="ml-2 text-sm text-gray-600">
+                                                                {{ selectedGateway.uptimePercentage | number : '1.0-2' }}%
+                                                              </span>
+                                                            </div>
+                                                            <div>
+                                                              <p class="text-sm font-medium text-gray-500">Line Status</p>
+                                                              <p class="mt-1 text-sm text-gray-900">
+                                                                {{ selectedGateway.lineStat }}
+                                                              </p>
+                                                            </div>
+                                                            <div>
+                                                              <p class="text-sm font-medium text-gray-500">Last Echo Time</p>
+                                                              <p class="mt-1 text-sm text-gray-900">
+                                                                {{ selectedGateway.lastIncEchoTime }}
+                                                              </p>
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                      <div
+                                                        class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg"
+                                                        >
+                                                        <button
+                                                          type="button"
+                                                          (click)="closeModal()"
+                                                          class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-rose-600 text-base font-medium text-white hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 sm:ml-3 sm:w-auto sm:text-sm"
+                                                          >
+                                                          Close
+                                                        </button>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                }

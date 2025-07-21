@@ -1,0 +1,341 @@
+<div
+  class="bg-gradient-to-br from-gray-50 to-white shadow-xl rounded-2xl overflow-hidden"
+  >
+  <div class="p-6 sm:p-10">
+    <div
+      class="flex flex-col sm:flex-row justify-between items-center mb-8 space-y-4 sm:space-y-0"
+      >
+      <h2 class="text-3xl font-extrabold text-gray-800 bg-clip-text">Users</h2>
+
+      <div
+        class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto"
+        >
+        <div class="relative w-full sm:w-64">
+          <input
+            type="text"
+            placeholder="Search users..."
+            (input)="applyFilter($event)"
+            class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition duration-300 ease-in-out"
+            />
+          <div
+            class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+            >
+            <svg
+              class="w-5 h-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+
+        <button
+          (click)="addNewUser()"
+          class="bg-rose-600 hover:bg-rose-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-opacity-50 flex items-center gap-2"
+          >
+          Add User
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    @if (loading$ | async) {
+      <div class="flex justify-center items-center p-8">
+        <div
+          class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-rose-600"
+        ></div>
+      </div>
+    }
+
+    <!-- Table -->
+    @if ((loading$ | async) === false) {
+      <div class="overflow-x-auto">
+        <table
+          mat-table
+          [dataSource]="dataSource"
+          matSort
+          class="w-full min-w-full divide-y divide-gray-200"
+          >
+          <!-- DomainId Column -->
+          <ng-container matColumnDef="domainId">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              mat-sort-header
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+              Username
+            </th>
+            <td
+              mat-cell
+              *matCellDef="let user"
+              class="px-6 py-4 whitespace-nowrap"
+              >
+              <div class="flex items-center">
+                <!-- <div class="flex-shrink-0 h-10 w-10">
+                <img
+                  class="h-10 w-10 rounded-full"
+                  src="https://ui-avatars.com/api/?name={{
+                    user.domainId
+                  }}&background=random"
+                  alt="{{ user.domainId }}"
+                  />
+              </div> -->
+              <div class="ml-4">
+                <div class="text-sm font-medium text-gray-900">
+                  {{ user.domainId }}
+                </div>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+        <!-- DomainId Column -->
+        <ng-container matColumnDef="phoneNumber">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            mat-sort-header
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+            Phone Number
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let user"
+            class="px-6 py-4 whitespace-nowrap"
+            >
+            <div class="flex items-center">
+              <div class="flex-shrink-0 h-10 w-10">
+                <img
+                  class="h-10 w-10 rounded-full"
+                  src="https://ui-avatars.com/api/?name={{
+                    user.phoneNumber
+                  }}&background=random"
+                  alt="{{ user.phoneNumber }}"
+                  />
+              </div>
+              <div class="ml-4">
+                <div class="text-sm font-medium text-gray-900">
+                  {{ user.phoneNumber }}
+                </div>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+        <!-- Role Column -->
+        <ng-container matColumnDef="role">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            mat-sort-header
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+            Role
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let user"
+            class="px-6 py-4 whitespace-nowrap"
+            >
+            <span
+              class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+              [ngClass]="{
+                'bg-blue-100 text-blue-800': user.role === 'ADMIN',
+                'bg-green-100 text-green-800': user.role === 'IT',
+                'bg-yellow-100 text-yellow-800': user.role === 'BRANCH',
+                'bg-purple-100 text-purple-800': user.role === 'OMNI_CHANNEL',
+                'bg-yellow-100 text-yellow-100': user.role === 'OMNI_CHANNEL_RECONCILIATION',
+                
+              }"
+              >
+              {{ user.role }}
+            </span>
+          </td>
+        </ng-container>
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            mat-sort-header
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+            Status
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let user"
+            class="px-6 py-4 whitespace-nowrap"
+            >
+            <span
+              class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+              [ngClass]="{
+                'bg-green-100 text-green-800': user.status === 'ACTIVE',
+                'bg-red-100 text-red-800': user.status === 'INACTIVE'
+              }"
+              >
+              {{ user.status }}
+            </span>
+          </td>
+        </ng-container>
+        <!-- Notification Level Column -->
+        <ng-container matColumnDef="notificationLevel">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            mat-sort-header
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+            Notification Level
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let user"
+            class="px-6 py-4 whitespace-nowrap"
+            >
+            <span
+              [ngClass]="getNotificationClass(user.notificationLevel)"
+              class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+              >
+              {{ user.notificationLevel }}
+            </span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="emailSubscribe">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            mat-sort-header
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+            Email Subscribed
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let user"
+            class="px-6 py-4 whitespace-nowrap"
+            >
+            <span
+              [ngClass]="getNotificationClass(user.emailSubscribe)"
+              class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+              >
+              {{ user.emailSubscribe }}
+            </span>
+          </td>
+        </ng-container>
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+            Actions
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let user"
+            class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+            >
+            <button
+              mat-icon-button
+              (click)="editUser(user); $event.stopPropagation()"
+              [attr.aria-label]="'Edit user'"
+              >
+              <mat-icon>edit</mat-icon>
+            </button>
+            <!-- <button
+            mat-icon-button
+            color="warn"
+            (click)="deleteUser(user)"
+            matTooltip="Delete User"
+            class="ml-2 text-red-600 hover:text-red-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"omni
+            >
+            <mat-icon>delete</mat-icon>
+          </button> -->
+        </td>
+      </ng-container>
+      <tr
+        mat-header-row
+        *matHeaderRowDef="userColumns"
+        class="bg-gray-50"
+      ></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: userColumns"
+        (click)="onRowClick(row)"
+        class="cursor-pointer hover:bg-gray-50"
+      ></tr>
+    </table>
+    <!-- No Data Message -->
+    @if (dataSource.data.length === 0) {
+      <div
+        class="text-center py-8 text-gray-500 bg-gray-50 rounded-b-lg"
+        >
+        <svg
+          class="mx-auto h-12 w-12 text-gray-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+          >
+          <path
+            vector-effect="non-scaling-stroke"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+            />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No users found</h3>
+        <p class="mt-1 text-sm text-gray-500">
+          Get started by creating a new user.
+        </p>
+        <div class="mt-6">
+          <button
+            type="button"
+            (click)="addNewUser()"
+            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+            <svg
+              class="-ml-1 mr-2 h-5 w-5"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+              >
+              <path
+                fill-rule="evenodd"
+                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                clip-rule="evenodd"
+                />
+            </svg>
+            Add User
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+<!-- Pagination -->
+<mat-paginator
+  [length]="totalItems$ | async"
+  [pageSize]="pageSize"
+  [pageSizeOptions]="[5, 10, 20, 50, 100]"
+  [pageIndex]="currentPage"
+  (page)="onPageChange($event)"
+  showFirstLastButtons
+  class="mt-4 bg-white shadow-sm rounded-lg"
+  >
+</mat-paginator>
+</div>
+</div>

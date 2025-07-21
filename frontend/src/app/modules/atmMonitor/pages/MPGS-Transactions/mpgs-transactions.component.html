@@ -1,0 +1,461 @@
+<div class="mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold mb-6">MPGS Transactions</h1>
+
+  <!-- Filters -->
+  <div class="grid grid-cols-1 gap-4 mb-6">
+    <div class="flex justify-between items-center mb-2">
+      <!-- Left Section: Status and Brand Dropdowns -->
+      <div class="flex space-x-4">
+        <select
+          [(ngModel)]="orderStatus"
+          (change)="onStatusChange($event)"
+          class="py-2.5 px-3 w-48 text-sm rounded-lg text-black border border-rose-300 focus:ring-rose-200 focus:border-rose-500 focus:outline-none"
+          >
+          <option value="" disabled selected>Select Status</option>
+          @for (status of statusOptions; track status) {
+            <option [value]="status">
+              {{ status }}
+            </option>
+          }
+        </select>
+
+        <select
+          [(ngModel)]="brand"
+          (change)="onbBrandChange($event)"
+          class="py-2.5 px-3 w-60 text-sm rounded-lg text-black border border-rose-300 focus:ring-rose-200 focus:border-rose-500 focus:outline-none"
+          >
+          <option value="" disabled selected>Select Brand</option>
+          @for (brand of brandOptions; track brand) {
+            <option [value]="brand">
+              {{ brand }}
+            </option>
+          }
+        </select>
+
+        <div class="w-60 max-w-xs">
+          <input
+            type="text"
+            ngxDaterangepickerMd
+            [showDropdowns]="true"
+            [locale]="{
+              applyLabel: 'ok',
+              format: 'YYYY-MM-DD',
+              separator: ' To '
+            }"
+            class="py-2.5 px-3 w-full left-0 text-sm placeholder-black rounded-lg text-black border border-rose-300 focus:ring-rose-200 focus:border-rose-500 focus:outline-none"
+            [(ngModel)]="selectedDate"
+            placeholder="Choose Date"
+            (change)="onInputChangeDateFilter($event)"
+            (keyup.backspace)="onClearRange()"
+            />
+        </div>
+      </div>
+
+      <!-- Right Section: Search -->
+      <div class="flex items-center space-x-4">
+        <input
+          type="text"
+          [(ngModel)]="search"
+          (input)="onSearchChange($event)"
+          placeholder="Search transactions..."
+          class="py-2.5 px-3 w-60 text-sm rounded-lg text-black border border-rose-300 focus:ring-rose-200 focus:border-rose-500 focus:outline-none"
+          />
+      </div>
+    </div>
+
+    <!-- Bottom Section: Clear Filters Button -->
+    <div class="mt-2 flex justify-start">
+      <button
+        class="text-sm text-rose-600 hover:underline flex items-center"
+        (click)="clearFilters()"
+        >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="w-5 h-5 mr-1"
+          >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9 2.25h6M4.5 6.75h15m-1.5 0v12a2.25 2.25 0 01-2.25 2.25H8.25A2.25 2.25 0 016 18.75v-12m3 0v-3a.75.75 0 01.75-.75h6.5a.75.75 0 01.75.75v3"
+            />
+        </svg>
+        Clear Filters
+      </button>
+    </div>
+
+    <!-- Error Alert -->
+    @if (error$ | async) {
+      <div
+        class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
+        role="alert"
+        >
+        <strong class="font-bold">Error!</strong>
+        <span class="block sm:inline">{{ error$ | async }}</span>
+      </div>
+    }
+
+    <!-- Table -->
+    <div class="flex flex-col mt-6">
+      <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+          <div
+            class="overflow-hidden border rounded-xl border-gray-200 dark:border-gray-700 md:rounded-lg"
+            >
+            @if (loading$ | async) {
+              <mat-progress-bar
+                mode="query"
+                color="warn"
+              ></mat-progress-bar>
+            }
+
+            <table
+              mat-table
+              [dataSource]="dataSource"
+              class="mat-elevation-z8 rounded-xl"
+              >
+              <ng-container matColumnDef="orderId">
+                <th
+                  mat-header-cell
+                  *matHeaderCellDef
+                  (click)="onHeaderClick('orderId')"
+                  [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                  >
+                  <div class="flex items-center gap-1">
+                    Order Id
+                    <span class="material-icons text-gray-400 text-sm"
+                      >unfold_more</span
+                      >
+                    </div>
+                  </th>
+                  <td
+                    mat-cell
+                    *matCellDef="let transaction"
+                    class="max-w-[200px]"
+                    >
+                    <div class="break-words whitespace-normal">
+                      {{ transaction.orderId }}
+                    </div>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="merchant">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    (click)="onHeaderClick('merchant')"
+                    [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                    >
+                    <div class="flex items-center gap-1">
+                      Merchant Id
+                      <span class="material-icons text-gray-400 text-sm"
+                        >unfold_more</span
+                        >
+                      </div>
+                    </th>
+                    <td
+                      mat-cell
+                      *matCellDef="let transaction"
+                      class="max-w-[150px]"
+                      >
+                      <div class="break-words whitespace-normal">
+                        {{ transaction.merchant }}
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="merchantName">
+                    <th
+                      mat-header-cell
+                      *matHeaderCellDef
+                      (click)="onHeaderClick('merchantName')"
+                      [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                      >
+                      <div class="flex items-center gap-1">
+                        Merchant Name
+                        <span class="material-icons text-gray-400 text-sm"
+                          >unfold_more</span
+                          >
+                        </div>
+                      </th>
+                      <td
+                        mat-cell
+                        *matCellDef="let transaction"
+                        class="max-w-[200px]"
+                        >
+                        <div class="break-words whitespace-normal">
+                          {{ transaction.merchantName }}
+                        </div>
+                      </td>
+                    </ng-container>
+
+                    <!-- Transaction Type Column -->
+                    <ng-container matColumnDef="transactionType">
+                      <th
+                        mat-header-cell
+                        *matHeaderCellDef
+                        (click)="onHeaderClick('transactionType')"
+                        [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                        >
+                        <div class="flex items-center gap-1">
+                          Transaction Type
+                          <span class="material-icons text-gray-400 text-sm"
+                            >unfold_more</span
+                            >
+                          </div>
+                        </th>
+                        <td
+                          mat-cell
+                          *matCellDef="let transaction"
+                          class="max-w-[150px]"
+                          >
+                          <div class="break-words whitespace-normal">
+                            {{ transaction.transactionType }}
+                          </div>
+                        </td>
+                      </ng-container>
+
+                      <!-- Time of Record Column -->
+                      <ng-container matColumnDef="timeOfRecord">
+                        <th
+                          mat-header-cell
+                          *matHeaderCellDef
+                          (click)="onHeaderClick('timeOfRecord')"
+                          [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                          >
+                          <div class="flex items-center gap-1">
+                            Time of Record
+                            <span class="material-icons text-gray-400 text-sm"
+                              >unfold_more</span
+                              >
+                            </div>
+                          </th>
+                          <td
+                            mat-cell
+                            *matCellDef="let transaction"
+                            class="max-w-[180px]"
+                            >
+                            <div class="break-words whitespace-normal">
+                              {{ formatDate(transaction.timeOfRecord) }}
+                            </div>
+                          </td>
+                        </ng-container>
+
+                        <!-- Card Number Column -->
+                        <ng-container matColumnDef="cardNumber">
+                          <th
+                            mat-header-cell
+                            *matHeaderCellDef
+                            [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                            >
+                            <div class="flex items-center gap-1">Card Number</div>
+                          </th>
+                          <td
+                            mat-cell
+                            *matCellDef="let transaction"
+                            class="max-w-[150px]"
+                            >
+                            <div class="break-words whitespace-normal">
+                              {{ transaction.cardNumber }}
+                            </div>
+                          </td>
+                        </ng-container>
+
+                        <!-- Amount Column -->
+                        <ng-container matColumnDef="amount">
+                          <th
+                            mat-header-cell
+                            *matHeaderCellDef
+                            (click)="onHeaderClick('amount')"
+                            [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                            >
+                            <div class="flex items-center gap-1">
+                              Amount
+                              <span class="material-icons text-gray-400 text-sm"
+                                >unfold_more</span
+                                >
+                              </div>
+                            </th>
+                            <td
+                              mat-cell
+                              *matCellDef="let transaction"
+                              class="max-w-[120px]"
+                              >
+                              <div class="break-words whitespace-normal">
+                                {{ formatAmount(transaction.amount) }}
+                                {{ transaction.currency }}
+                              </div>
+                            </td>
+                          </ng-container>
+
+                          <!-- Gateway Code Column -->
+                          <!-- <ng-container matColumnDef="gatewayCode">
+                          <th
+                            mat-header-cell
+                            *matHeaderCellDef
+                            (click)="onHeaderClick('gatewayCode')"
+                            [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                            >
+                            <div class="flex items-center gap-1">
+                              Gateway Code
+                              <span class="material-icons text-gray-400 text-sm"
+                                >unfold_more</span
+                                >
+                              </div>
+                            </th>
+                            <td
+                              mat-cell
+                              *matCellDef="let transaction"
+                              class="max-w-[150px]"
+                              >
+                              <span
+                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                [ngClass]="getStatusClass(transaction.gatewayCode)"
+                                >
+                                {{ transaction.gatewayCode }}
+                              </span>
+                            </td>
+                          </ng-container> -->
+
+                          <!-- Cardholder Name Column -->
+                          <ng-container matColumnDef="cardholderName">
+                            <th
+                              mat-header-cell
+                              *matHeaderCellDef
+                              [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                              >
+                              <div class="flex items-center gap-1">Cardholder Name</div>
+                            </th>
+                            <td
+                              mat-cell
+                              *matCellDef="let transaction"
+                              class="max-w-[200px]"
+                              >
+                              <div class="break-words whitespace-normal">
+                                {{ transaction.cardholderName }}
+                              </div>
+                            </td>
+                          </ng-container>
+
+                          <!-- Brand Column -->
+                          <ng-container matColumnDef="brand">
+                            <th
+                              mat-header-cell
+                              *matHeaderCellDef
+                              (click)="onHeaderClick('brand')"
+                              [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                              >
+                              <div class="flex items-center gap-1">
+                                Brand
+                                <span class="material-icons text-gray-400 text-sm"
+                                  >unfold_more</span
+                                  >
+                                </div>
+                              </th>
+                              <td
+                                mat-cell
+                                *matCellDef="let transaction"
+                                class="max-w-[120px]"
+                                >
+                                <span
+                                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                  [ngClass]="getBrandClass(transaction.brand)"
+                                  >
+                                  {{ transaction.brand }}
+                                </span>
+                              </td>
+                            </ng-container>
+
+                            <!-- Order Status Column -->
+                            <ng-container matColumnDef="orderStatus">
+                              <th
+                                mat-header-cell
+                                *matHeaderCellDef
+                                (click)="onHeaderClick('orderStatus')"
+                                [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                                >
+                                <div class="flex items-center gap-1">
+                                  Order Status
+                                  <span class="material-icons text-gray-400 text-sm"
+                                    >unfold_more</span
+                                    >
+                                  </div>
+                                </th>
+                                <td
+                                  mat-cell
+                                  *matCellDef="let transaction"
+                                  class="max-w-[180px]"
+                                  >
+                                  <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full whitespace-pre-line text-center"
+                                    [ngClass]="getStatusClass(transaction.orderStatus)"
+                                    >
+                                    {{ formatStatusText(transaction.orderStatus) }}
+                                  </span>
+                                </td>
+                              </ng-container>
+
+                              <ng-container matColumnDef="message">
+                                <th
+                                  mat-header-cell
+                                  *matHeaderCellDef
+                                  (click)="onHeaderClick('message')"
+                                  [ngStyle]="{ 'background-color': '#e5e7eb' }"
+                                  >
+                                  <div class="flex items-center gap-1">
+                                    Message
+                                    <span class="material-icons text-gray-400 text-sm"
+                                      >unfold_more</span
+                                      >
+                                    </div>
+                                  </th>
+                                  <td
+                                    mat-cell
+                                    *matCellDef="let transaction"
+                                    class="max-w-[150px]"
+                                    >
+                                    <span
+                                      class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                    [ngClass]="
+                      getStatusClass(transaction.responseMessage, 'message')
+                    "
+                                      >
+                                      {{ transaction.responseMessage }}
+                                    </span>
+                                  </td>
+                                </ng-container>
+
+                                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                                <!-- ... existing code ... -->
+                                <tr
+                                  mat-row
+                                  *matRowDef="let row; columns: displayedColumns"
+                                  (click)="onRowClick(row)"
+                                  style="cursor: pointer"
+                                ></tr>
+                                <!-- ... existing code ... -->
+                              </table>
+
+                              @if (dataSource.data.length === 0) {
+                                <div
+                                  class="flex items-center justify-center h-32 bg-gray-50 text-gray-500 text-lg font-medium"
+                                  >
+                                  No transactions available
+                                </div>
+                              }
+
+                              <mat-paginator
+                                [length]="totalItems$ | async"
+                                [pageSize]="pageSize"
+                                [pageSizeOptions]="[5, 10, 20, 50, 100, 250, 500, 1000]"
+                                (page)="onPageChange($event)"
+                                showFirstLastButtons
+                              ></mat-paginator>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>

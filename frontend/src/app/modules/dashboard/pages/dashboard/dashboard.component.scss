@@ -1,0 +1,29 @@
+.active-link {
+    background: rgba(255, 81, 125, 0.2);
+    border-left: 5px solid #ff7562;
+  
+    // .nav-item-icon {
+    //   margin-left: -5px;
+    // }
+  }
+  
+  .close-nav-state {
+    .active-link {
+      span {
+        margin-left: 15px;
+      }
+    }
+  }
+
+  .white-container {
+    background-color: rgb(255, 255, 255);
+  }
+  
+  .dropdown-content {
+    display: none;
+  }
+  
+  .dropdown-content.show {
+    display: block;
+  }
+  

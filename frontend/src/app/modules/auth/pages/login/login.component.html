@@ -1,0 +1,57 @@
+
+<section class="bg-gray-50 dark:bg-gray-900">
+  @if (loading) {
+    <mat-progress-bar
+      mode="query"
+      color="warn"
+    ></mat-progress-bar>
+  }
+  <div class="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+    <a href="#" class="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
+      <img class="w-8 h-8 mr-2"     src="assets/images/logo.png"  alt="logo">
+      Atm Monitoring
+    </a>
+    <div class="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+      <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
+        <h1 class="text-xl font-bold text-center leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
+          Sign in
+        </h1>
+
+        <!-- Session Status -->
+        @if (error) {
+          <app-alert-error [message]="error" class="mt-4"></app-alert-error>
+        }
+
+        @if (sessionError$ | async; as sessionError;) {
+          <app-alert-warning [message]="sessionError" class="mt-4"></app-alert-warning>
+        }
+
+        <form class="space-y-4 md:space-y-6" [formGroup]="form" (submit)="onSubmit()"  action="#">
+          <div>
+            <label for="outlookId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your Domain ID</label>
+            <app-input name="outlookId" formControlName="domain" placeholder="name.domain" >
+            </app-input>
+          </div>
+          <div>
+            <label for="userPass" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
+            <app-input name="userPass"       [type]="'password'"
+              formControlName="userPass" placeholder="••••••••">
+            </app-input>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-start">
+
+            </div>
+            <a href="http://sysaidnew:8080/Login.jsp?navLanguage=en-US" class="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500">Forgot password?</a>
+
+          </div>
+          <!-- <button type="submit" class="w-full text-white bg-rose-600 hover:bg-rose-200 hover:text-rose-600  focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Sign in</button> -->
+          <app-primary-button type="submit"  class="justify-center w-full group bg-rose-600 hover:bg-rose-200 hover:text-rose-600  focus:ring-2 focus:outline-none focus:ring-rose-600 font-medium rounded-lg text-sm">
+
+            <span>Login</span>
+          </app-primary-button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
