@@ -1,0 +1,196 @@
+# ATM Monitoring System - .gitignore
+# ===========================================
+
+# 🔐 SECURITY - Never commit these files!
+*.key
+*.pem
+*.cert
+*.p12
+*.jks
+*.keystore
+application-prod.properties.backup
+**/secrets/
+**/*secret*
+**/*password*
+**/*token*
+
+# 📁 IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# 🅰️ ANGULAR/FRONTEND (Node.js/Nx workspace)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.nx/
+frontend/coverage/
+frontend/tmp/
+frontend/out-tsc/
+frontend/bazel-out/
+frontend/*.log
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Nx
+frontend/.nx/cache
+frontend/.nx/workspace-data
+frontend/dist.zip
+
+# Cypress
+frontend/cypress/videos/
+frontend/cypress/screenshots/
+frontend/cypress/downloads/
+
+# ☕ BACKEND (Java/Spring Boot/Maven)
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+backend/.mvn/wrapper/maven-wrapper.properties
+backend/mvnw
+backend/mvnw.cmd
+backend/*.log
+backend/logs/
+backend/temp/
+backend/tmp/
+
+# Spring Boot
+backend/application-local.properties
+backend/application-dev-local.properties
+backend/HELP.md
+
+# Maven
+backend/pom.xml.tag
+backend/pom.xml.releaseBackup
+backend/pom.xml.versionsBackup
+backend/pom.xml.next
+backend/release.properties
+backend/dependency-reduced-pom.xml
+backend/buildNumber.properties
+backend/.mvn/timing.properties
+backend/.mvn/wrapper/
+
+# Eclipse
+backend/.apt_generated
+backend/.classpath
+backend/.factorypath
+backend/.project
+backend/.settings
+backend/.springBeans
+backend/.sts4-cache
+
+# IntelliJ IDEA
+backend/*.iws
+backend/*.iml
+backend/*.ipr
+backend/out/
+
+# NetBeans
+backend/nbproject/private/
+backend/nbbuild/
+backend/dist/
+backend/nbdist/
+backend/.nb-gradle/
+backend/build/
+
+# 🗄️ DATABASE
+*.db
+*.sqlite
+*.sqlite3
+*.h2.db
+**/*.h2.db
+
+# 🚀 DEPLOYMENT
+backend/deploy-local.ps1
+backend/start-server-simple.bat
+backend/*.bat
+backend/*.cmd
+backend/*.sh
+deploy.zip
+production-backup/
+
+# 📦 COMPILED/GENERATED
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# 📊 LOGS AND TEMP
+*.log
+*.log.*
+logs/
+temp/
+tmp/
+*.tmp
+*.temp
+
+# 🔧 PACKAGE MANAGERS
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json.backup
+yarn.lock.backup
+
+# 🌍 ENVIRONMENT
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 🧪 TESTING
+coverage/
+*.lcov
+.nyc_output/
+
+# 📱 MOBILE
+*.apk
+*.ipa
+
+# 🗂️ OS GENERATED
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 📋 MISC
+*.bak
+*.backup
+*.old
+*.orig
+*.save
+*.swp
+*.swo
+*~
+
+# 🔄 Git
+.git/
+.gitattributes.backup
+
+# 📄 Documentation drafts
+**/*DRAFT*
+**/*draft*
+**/*TODO*
+
+# 🎯 Project specific
+exports/*.xlsx
+exports/*.txt
+migrations.json
+.nx/cache/
+.angular/cache/ 
