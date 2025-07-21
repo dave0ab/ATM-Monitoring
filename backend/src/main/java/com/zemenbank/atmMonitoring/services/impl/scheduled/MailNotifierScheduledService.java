@@ -247,6 +247,7 @@ public class MailNotifierScheduledService extends BaseServices {
     //---------------------------------------------------------------------------------------------
 
 
+    
 
     public void checkAndNotifyATMStatus() {
         try {
@@ -435,6 +436,145 @@ public class MailNotifierScheduledService extends BaseServices {
         return template;
     }
 
+    // New combined method that generates both ATM status and cash level reports in one email
+    private String generateCombinedReport(List<AtmMonitorStatus> statuses, List<ATMCashBalance> atms, String template) {
+        StringBuilder combinedContent = new StringBuilder();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy hh:mm a");
+        LocalDateTime now = LocalDateTime.now();
+        String reportTitle = "Zemen Bank ATM Report - " + now.format(formatter);
+
+        // Add styling
+        combinedContent.append("<style>")
+                .append("table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; }")
+                .append("thead { background-color: #f43f5e; color: white; }") // rose-600 for headers
+                .append("th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }")
+                .append("tbody tr:nth-child(odd) { background-color: #ffe4e6; }") // rose-200 for odd rows
+                .append("tbody tr:nth-child(even) { background-color: #fff; }") // white for even rows
+                .append("h1, h2 { font-family: Arial, sans-serif; color: #f43f5e; text-align: center; }") // rose-600 for headings
+                .append("</style>");
+
+        // Add header
+        combinedContent.append("<div class='header'>")
+                .append("<img class='logo' src='https://www.zemenbank.com/images/assets/logo.png' alt='Zemen Bank Logo' >") // Inline image
+                .append("<div>")
+                .append("<h1>Zemen Bank</h1>")
+                .append("<h2>ATM Status & Cash Level Notification</h2>")
+                .append("<h3>").append(now.format(formatter)).append("</h3>")
+                .append("<br>")
+                .append("<br>")
+                .append("</div>")
+                .append("</div>");
+
+        // First section: ATM Status Report
+        if (statuses != null && !statuses.isEmpty()) {
+            combinedContent.append("<h2>ATM Status Report</h2>");
+            
+            // Group statuses by `status` field
+            Map<String, List<AtmMonitorStatus>> groupedByStatus = statuses.stream()
+                    .collect(Collectors.groupingBy(AtmMonitorStatus::getStatus));
+
+            groupedByStatus.forEach((status, statusList) -> {
+                combinedContent.append("<h3>Status: ").append(status).append("</h3>")
+                        .append("<table>")
+                        .append("<thead>")
+                        .append("<tr>")
+                        .append("<th>ID</th>")
+                        .append("<th>ATM Name</th>")
+                        .append("<th>Registered At</th>")
+                        .append("<th>Last Transaction</th>")
+                        .append("<th>Total Down Time</th>")
+                        .append("<th>Escalation Level</th>")
+                        .append("<th>Remark</th>")
+                        .append("</tr>")
+                        .append("</thead>")
+                        .append("<tbody>");
+
+                // Populate table rows
+                statusList.forEach(statusObj -> {
+                    Duration duration = Duration.between(statusObj.getRegisteredAt(), statusObj.getSinceDateTime());
+                    long days = duration.toDays();
+                    long hours = duration.toHours() % 24;
+
+                    combinedContent.append("<tr>")
+                            .append("<td>").append(statusObj.getId()).append("</td>")
+                            .append("<td>").append(statusObj.getAtmName()).append("</td>")
+                            .append("<td>").append(statusObj.getSinceDateTime().format(formatter)).append("</td>")
+                            .append("<td>").append(statusObj.getLastTransaction().format(formatter)).append("</td>")
+                            .append("<td>")
+                            .append(days).append(" day").append(days != 1 ? "s" : "") // Handle plural for days
+                            .append(" and ")
+                            .append(hours).append(" hour").append(hours != 1 ? "s" : "") // Handle plural for hours
+                            .append("</td>")
+                            .append("<td>").append(statusObj.getLevel()).append("</td>")
+                            .append("<td>").append(statusObj.getRemark()).append("</td>")
+                            .append("</tr>");
+                });
+
+                combinedContent.append("</tbody></table>");
+            });
+        }
+
+        // Add separator between sections
+        if ((statuses != null && !statuses.isEmpty()) && (atms != null && !atms.isEmpty())) {
+            combinedContent.append("<br><hr><br>");
+        }
+
+        // Second section: Cash Level Report
+        if (atms != null && !atms.isEmpty()) {
+            combinedContent.append("<h2>ATM Cash Level Report</h2>")
+                    .append("<table>")
+                    .append("<thead>")
+                    .append("<tr>")
+                    .append("<th>ID</th>")
+                    .append("<th>ATM Name</th>")
+                    .append("<th>Balance</th>")
+                    .append("<th>Registered Date</th>")
+                    .append("<th>Last Transaction</th>")
+                    .append("<th>Escalation Level</th>")
+                    .append("<th>Total Time with Low Cash</th>")
+                    .append("<th>Remark</th>")
+                    .append("</tr>")
+                    .append("</thead>")
+                    .append("<tbody>");
+
+            atms.forEach(atm -> {
+                Duration duration = Duration.between(atm.getRegisteredAt(), atm.getSinceDateTime());
+                long days = duration.toDays();
+                long hours = duration.toHours() % 24;
+
+                Optional<AtmMonitorStatus> amOpt = monitorStatusRepository.findByTerminalId(String.valueOf(atm.getAtmId()));
+                AtmMonitorStatus am = null;
+                if (amOpt.isPresent()) {
+                    am = amOpt.get();
+                }
+                combinedContent.append("<tr>")
+                        .append("<td>").append(atm.getId()).append("</td>")
+                        .append("<td>").append(atm.getName()).append("</td>")
+                        .append("<td>").append(String.format("ETB %.2f", atm.getBalance())).append("</td>")
+                        .append("<td>").append(atm.getRegisteredAt().format(formatter)).append("</td>")
+                        .append("<td>").append(atm.getLastTransaction().format(formatter)).append("</td>")
+                        .append("<td>").append(atm.getLevel()).append("</td>")
+                        .append("<td>")
+                        .append(days).append(" day").append(days != 1 ? "s" : "") // Singular/plural for days
+                        .append(" and ")
+                        .append(hours).append(" hour").append(hours != 1 ? "s" : "") // Singular/plural for hours
+                        .append("</td>")
+                        .append("<td>")
+                        .append(Optional.ofNullable(am != null ? am.getRemark() : "").orElse(""))
+                        .append("</td>")
+                        .append("</tr>");
+            });
+
+            combinedContent.append("</tbody></table>");
+        }
+
+        // Replace placeholders in the template
+        template = template.replace("{{reportTitle}}", reportTitle);
+        template = template.replace("{{reportContent}}", combinedContent.toString());
+
+        return template;
+    }
+
 
     //---------------------------------------------------------------------------------------------
 
@@ -458,12 +598,13 @@ public class MailNotifierScheduledService extends BaseServices {
                     continue;
                 }
 
-                Duration downtime = Duration.between(status.getSinceDateTime(), LocalDateTime.now());
+                // Calculate downtime from when the issue was first registered
+                Duration downtime = Duration.between(status.getRegisteredAt(), LocalDateTime.now());
                 long minutes = downtime.toMinutes();
 
-                // Determine escalation level dynamically
-
-                status.setLevel(status.getLevel());
+                // Determine escalation level based on downtime
+                EscalationLevels newLevel = determineGatewayStatusEscalationLevel(minutes);
+                status.setLevel(newLevel);
 
                 // Group by escalation level for notification
                 groupedByLevel.computeIfAbsent(status.getLevel(), k -> new ArrayList<>()).add(status);
@@ -480,12 +621,19 @@ public class MailNotifierScheduledService extends BaseServices {
                 // Include users for current level and all lower levels
                 List<User> users = userRepository.findAll().stream()
                         .filter(user -> user.getRole() == Roles.ADMIN || user.getRole() == Roles.IT)
-                        .filter(user -> EscalationLevels.valueOf(user.getNotificationLevel()).ordinal() <= currentLevel.ordinal())
+                        .filter(user -> {
+                            try {
+                                return EscalationLevels.valueOf(user.getNotificationLevel()).ordinal() <= currentLevel.ordinal();
+                            } catch (IllegalArgumentException e) {
+                                logger.warn("Invalid notification level for user {}: {}", user.getDomainId(), user.getNotificationLevel());
+                                return false; // Skip users with invalid notification levels
+                            }
+                        })
                         .filter(user -> "ACTIVE".equalsIgnoreCase(user.getStatus()))
                         .collect(Collectors.toList());
 
                 for (User user : users) {
-
+                    if (user.getEmailSubscribe()) {
                         String emailContent = generateEmailContent(statuses);
                         try {
                             mailService.sendMail("Gateway Escalation Alert: " + currentLevel.name(), emailContent, user.getDomainId());
@@ -495,8 +643,7 @@ public class MailNotifierScheduledService extends BaseServices {
                         } catch (Exception e) {
                             System.err.println("Failed to send email to " + user.getDomainId() + ": " + e.getMessage());
                         }
-
-
+                    }
                 }
             }
         } catch (Exception e) {
@@ -505,6 +652,21 @@ public class MailNotifierScheduledService extends BaseServices {
     }
 
     // Determine escalation level based on downtime
+    private EscalationLevels determineGatewayStatusEscalationLevel(long minutes) {
+        if (minutes < 1) {
+            return EscalationLevels.WAIT;
+        } else if (minutes < 5) {
+            return EscalationLevels.FIRST;
+        } else if (minutes < 10) {
+            return EscalationLevels.SECOND;
+        } else if (minutes < 30) {
+            return EscalationLevels.THIRD;
+        } else if (minutes < 60) {
+            return EscalationLevels.FOURTH;
+        } else {
+            return EscalationLevels.FIFTH;
+        }
+    }
 
 
     // Generate email content
@@ -557,6 +719,7 @@ public class MailNotifierScheduledService extends BaseServices {
         for (GatewayMonitorStatus status : statuses) {
             String translatedName = networkTranslations.getOrDefault(status.getNetwork(), "Unknown Network");
 
+            // Calculate downtime from when the issue was first registered (consistent with escalation logic)
             Duration downtime = Duration.between(status.getRegisteredAt(), LocalDateTime.now());
             long hours = downtime.toHours();
             long minutes = downtime.toMinutes() % 60;
@@ -587,39 +750,33 @@ public class MailNotifierScheduledService extends BaseServices {
 
     @Scheduled(cron = "0 0 8 * * ?", zone = "Africa/Addis_Ababa")
     public void triggerAt8() throws IOException {
-        checkAndNotifyATMStatus();
-        checkAndNotifyATMCashEscalationLevels();
+        checkAndNotifyATMCombined();
     }
 
     @Scheduled(cron = "0 30 11 * * ?", zone = "Africa/Addis_Ababa")
     public void triggerAt1130() throws IOException {
-        checkAndNotifyATMStatus();
-        checkAndNotifyATMCashEscalationLevels();
+        checkAndNotifyATMCombined();
     }
 
     @Scheduled(cron = "0 0 13 * * ?", zone = "Africa/Addis_Ababa")
     public void triggerAt3() throws IOException {
-        checkAndNotifyATMStatus();
-        checkAndNotifyATMCashEscalationLevels();
+        checkAndNotifyATMCombined();
     }
 
     @Scheduled(cron = "0 0 15 * * ?", zone = "Africa/Addis_Ababa")
     public void triggerAt1() throws IOException {
-        checkAndNotifyATMStatus();
-        checkAndNotifyATMCashEscalationLevels();
+        checkAndNotifyATMCombined();
     }
 
     @Scheduled(cron = "0 0 17 * * ?", zone = "Africa/Addis_Ababa")
     public void triggerAt5() throws IOException {
-        checkAndNotifyATMStatus();
-        checkAndNotifyATMCashEscalationLevels();
+        checkAndNotifyATMCombined();
     }
 
 
     @Scheduled(cron = "0 0 9-17 * * ?", zone = "Africa/Addis_Ababa")
     public void triggerAtOmniChannel() throws IOException {
-        checkAndNotifyATMStatusOmniChannel();
-        checkAndNotifyATMCashEscalationLevelsOmniChannel();
+        checkAndNotifyATMCombinedOmniChannel();
     }
 
 
@@ -851,6 +1008,249 @@ public class MailNotifierScheduledService extends BaseServices {
         } catch (IOException e) {
             logger.error("Error reading email template file: {}", e.getMessage(), e);
             throw e;
+        }
+    }
+
+    // Combined method to handle both ATM status and cash level notifications in one email
+    public void checkAndNotifyATMCombined() {
+        try {
+            // Fetch both monitor statuses and cash balances
+            List<AtmMonitorStatus> monitorStatuses = monitorStatusRepository.findAll();
+            List<ATMCashBalance> atmBalances = atmsCashBalanceRepository.findAll();
+
+            // Filter out WAIT levels and group by escalation level
+            Map<EscalationLevels, List<AtmMonitorStatus>> groupedStatusByLevel = monitorStatuses.stream()
+                    .filter(status -> status.getLevel() != EscalationLevels.WAIT)
+                    .collect(Collectors.groupingBy(AtmMonitorStatus::getLevel));
+
+            Map<EscalationLevels, List<ATMCashBalance>> groupedCashByLevel = atmBalances.stream()
+                    .filter(atm -> atm.getLevel() != EscalationLevels.WAIT)
+                    .collect(Collectors.groupingBy(ATMCashBalance::getLevel));
+
+            // Prepare email content for each recipient based on escalation level
+            Map<String, StringBuilder> emailContentMap = new HashMap<>();
+
+            // Loop through each escalation level and prepare combined email content
+            for (EscalationLevels level : EscalationLevels.values()) {
+                if (level == EscalationLevels.WAIT) continue;
+
+                // Include all cases relevant for this level and above
+                List<AtmMonitorStatus> relevantStatuses = groupedStatusByLevel.entrySet().stream()
+                        .filter(entry -> entry.getKey().ordinal() >= level.ordinal())
+                        .flatMap(entry -> entry.getValue().stream())
+                        .sorted((s1, s2) -> s2.getSinceDateTime().compareTo(s1.getSinceDateTime()))
+                        .collect(Collectors.toList());
+
+                List<ATMCashBalance> relevantATMs = groupedCashByLevel.entrySet().stream()
+                        .filter(entry -> entry.getKey().ordinal() >= level.ordinal())
+                        .flatMap(entry -> entry.getValue().stream())
+                        .sorted(Comparator.comparingDouble(atm -> Objects.requireNonNullElse(atm.getBalance(), 0.0)))
+                        .collect(Collectors.toList());
+
+                // Only proceed if there are relevant statuses or ATMs
+                if (!relevantStatuses.isEmpty() || !relevantATMs.isEmpty()) {
+                    // Load the HTML template
+                    String templatePath = "templates/report.html";
+                    String htmlTemplate = Files.readString(Paths.get(templatePath));
+
+                    // Fetch users for this level and filter based on roles and allowed TIDs
+                    List<User> users = userRepository.findByNotificationLevel(level.name())
+                            .stream()
+                            .filter(user -> "ACTIVE".equalsIgnoreCase(user.getStatus()))
+                            .collect(Collectors.toList());
+
+                    // Loop through users to send the correct content based on their roles and allowed TIDs
+                    for (User user : users) {
+                        // Check user roles for filtering ATMs
+                        boolean isAdminOrITOrBranch = user.getRole().getValue().contains("ADMIN") || user.getRole().getValue().contains("IT");
+                        logger.debug("User roles: {}, isAdminOrITOrBranch: {}", user.getRole().getValue(), isAdminOrITOrBranch);
+
+                        List<String> allowedTIDs;
+                        List<AtmMonitorStatus> userRelevantStatuses = relevantStatuses;
+                        List<ATMCashBalance> userRelevantATMs = relevantATMs;
+
+                        if (!isAdminOrITOrBranch) {
+                            allowedTIDs = atmAccessRepository.findByUserId(String.valueOf(user.getUser_id())).stream()
+                                    .filter(access -> "CHECKED".equalsIgnoreCase(access.getStatus()))
+                                    .map(ATMAccesses::getTID)
+                                    .toList();
+                            logger.debug("Allowed TIDs for user {}: {}", user.getDomainId(), allowedTIDs);
+
+                            if (allowedTIDs.isEmpty()) {
+                                logger.warn("No allowed TIDs found for user: {}", user.getDomainId());
+                                continue; // Skip the user if they have no allowed TIDs
+                            }
+
+                            // Filter relevant data based on allowed TIDs for non-admin/IT/BRANCH users
+                            userRelevantStatuses = relevantStatuses.stream()
+                                    .filter(status -> allowedTIDs.contains(status.getTerminalId()))
+                                    .collect(Collectors.toList());
+
+                            userRelevantATMs = relevantATMs.stream()
+                                    .filter(atm -> allowedTIDs.contains(atm.getAtmId()))
+                                    .collect(Collectors.toList());
+                        }
+
+                        // Generate and send email content only if there are relevant statuses or ATMs
+                        if (!userRelevantStatuses.isEmpty() || !userRelevantATMs.isEmpty()) {
+                            String emailContent = generateCombinedReport(userRelevantStatuses, userRelevantATMs, htmlTemplate);
+
+                            emailContentMap.computeIfAbsent(user.getDomainId(), k -> new StringBuilder())
+                                    .append(emailContent).append("<hr>");
+                        }
+                    }
+                }
+            }
+
+            // Send combined emails to each recipient
+            for (Map.Entry<String, StringBuilder> entry : emailContentMap.entrySet()) {
+                String recipient = entry.getKey();
+                String combinedContent = entry.getValue().toString();
+
+                try {
+                    Optional<User> userOpt = userRepository.findByDomainId(recipient);
+                    User user = userOpt.get();
+                    if (user.getEmailSubscribe()) {
+                        mailService.sendMail("ATM Status & Cash Level Notifications", combinedContent, recipient);
+                        smsService.sendSms(combinedContent, user.getPhoneNumber());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Failed to send email to " + recipient + ": " + e.getMessage());
+                    // Log and continue processing
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Combined method for Omni Channel notifications
+    public void checkAndNotifyATMCombinedOmniChannel() {
+        try {
+            // Fetch both monitor statuses and cash balances
+            List<AtmMonitorStatus> monitorStatuses = monitorStatusRepository.findAll();
+            List<ATMCashBalance> atmBalances = atmsCashBalanceRepository.findAll();
+
+            // Filter out WAIT levels and group by escalation level
+            Map<EscalationLevels, List<AtmMonitorStatus>> groupedStatusByLevel = monitorStatuses.stream()
+                    .filter(status -> status.getLevel() != EscalationLevels.WAIT)
+                    .collect(Collectors.groupingBy(AtmMonitorStatus::getLevel));
+
+            Map<EscalationLevels, List<ATMCashBalance>> groupedCashByLevel = atmBalances.stream()
+                    .filter(atm -> atm.getLevel() != EscalationLevels.WAIT)
+                    .collect(Collectors.groupingBy(ATMCashBalance::getLevel));
+
+            // Prepare email content for each recipient based on escalation level
+            Map<String, StringBuilder> emailContentMap = new HashMap<>();
+
+            // Loop through each escalation level and prepare combined email content
+            for (EscalationLevels level : EscalationLevels.values()) {
+                if (level == EscalationLevels.WAIT) continue;
+
+                // Include all cases relevant for this level and above
+                List<AtmMonitorStatus> relevantStatuses = groupedStatusByLevel.entrySet().stream()
+                        .filter(entry -> entry.getKey().ordinal() >= level.ordinal())
+                        .flatMap(entry -> entry.getValue().stream())
+                        .sorted((s1, s2) -> s2.getSinceDateTime().compareTo(s1.getSinceDateTime()))
+                        .collect(Collectors.toList());
+
+                List<ATMCashBalance> relevantATMs = groupedCashByLevel.entrySet().stream()
+                        .filter(entry -> entry.getKey().ordinal() >= level.ordinal())
+                        .flatMap(entry -> entry.getValue().stream())
+                        .sorted(Comparator.comparingDouble(atm -> Objects.requireNonNullElse(atm.getBalance(), 0.0)))
+                        .collect(Collectors.toList());
+
+                // Only proceed if there are relevant statuses or ATMs
+                if (!relevantStatuses.isEmpty() || !relevantATMs.isEmpty()) {
+                    // Load the HTML template
+                    String templatePath = "templates/report.html";
+                    String htmlTemplate = Files.readString(Paths.get(templatePath));
+
+                    // Fetch users for this level and filter based on roles and allowed TIDs
+                    List<User> users = userRepository.findByNotificationLevel(level.name())
+                            .stream()
+                            .filter(user -> "ACTIVE".equalsIgnoreCase(user.getStatus()))
+                            .collect(Collectors.toList());
+
+                    // Loop through users to send the correct content based on their roles and allowed TIDs
+                    for (User user : users) {
+                        boolean isAdminOrITOrBranch = user.getRole().getValue().contains("ADMIN") ||
+                                user.getRole().getValue().contains("IT") && user.getNotificationLevel().equals("FIRST");
+
+                        // Skip ADMIN and IT users entirely for Omni Channel
+                        if (isAdminOrITOrBranch) {
+                            logger.debug("Skipping email generation for ADMIN/IT user: {}", user.getDomainId());
+                            continue;
+                        }
+
+                        // Fetch allowed TIDs for non-ADMIN/IT users
+                        List<String> allowedTIDs = atmAccessRepository.findByUserId(String.valueOf(user.getUser_id())).stream()
+                                .filter(access -> "CHECKED".equalsIgnoreCase(access.getStatus()))
+                                .map(ATMAccesses::getTID)
+                                .toList();
+                        logger.debug("Allowed TIDs for user {}: {}", user.getDomainId(), allowedTIDs);
+
+                        if (allowedTIDs.isEmpty()) {
+                            logger.warn("No allowed TIDs found for user: {}", user.getDomainId());
+                            continue; // Skip the user if they have no allowed TIDs
+                        }
+
+                        // Filter relevant data for this user
+                        List<AtmMonitorStatus> userRelevantStatuses = relevantStatuses.stream()
+                                .filter(status -> allowedTIDs.contains(status.getTerminalId()))
+                                .collect(Collectors.toList());
+
+                        List<ATMCashBalance> userRelevantATMs = relevantATMs.stream()
+                                .filter(atm -> allowedTIDs.contains(atm.getAtmId()))
+                                .collect(Collectors.toList());
+
+                        // Generate and send email content only if there are relevant statuses or ATMs
+                        if (!userRelevantStatuses.isEmpty() || !userRelevantATMs.isEmpty()) {
+                            String emailContent = generateCombinedReport(userRelevantStatuses, userRelevantATMs, htmlTemplate);
+
+                            emailContentMap.computeIfAbsent(user.getDomainId(), k -> new StringBuilder())
+                                    .append(emailContent).append("<hr>");
+                        }
+                    }
+                }
+            }
+
+            // Send combined emails to each recipient
+            for (Map.Entry<String, StringBuilder> entry : emailContentMap.entrySet()) {
+                String recipient = entry.getKey();
+                String combinedContent = entry.getValue().toString();
+
+                try {
+                    Optional<User> userOpt = userRepository.findByDomainId(recipient);
+                    if (userOpt.isPresent()) {
+                        User user = userOpt.get();
+                        boolean isAdminOrITOrBranch = user.getRole().getValue().contains("ADMIN") ||
+                                user.getRole().getValue().contains("IT") || !user.getNotificationLevel().equals("FIRST");
+
+                        // Skip ADMIN and IT users during email sending
+                        if (isAdminOrITOrBranch) {
+                            logger.debug("Skipping email sending for ADMIN/IT user: {}", user.getDomainId());
+                            continue;
+                        }
+
+                        if (user.getEmailSubscribe()) {
+                            // Send email
+                            mailService.sendMail("ATM Status & Cash Level Notifications", combinedContent, recipient);
+
+                            // Send SMS if phone number exists
+                            if (user.getPhoneNumber() != null && !user.getPhoneNumber().isEmpty()) {
+                                smsService.sendSms(combinedContent, user.getPhoneNumber());
+                            } else {
+                                logger.warn("Phone number is missing for user: {}", user.getDomainId());
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error("Failed to send email/SMS to {}: {}", recipient, e.getMessage(), e);
+                }
+            }
+        } catch (IOException e) {
+            logger.error("Error reading email template file: {}", e.getMessage(), e);
         }
     }
 

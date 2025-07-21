@@ -51,10 +51,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return;
       }
 
+      // Skip JWT processing if authentication is already set (e.g., by API token filter)
+      if (SecurityContextHolder.getContext().getAuthentication() != null) {
+        filterChain.doFilter(request, response);
+        return;
+      }
+
       jwt = authHeader.substring(7);
       userDomain = jwtService.extractUsername(jwt);
 
-      if (userDomain != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+      if (userDomain != null) {
         UserDetails userDetails = this.userDetailsService.loadUserByUsername(userDomain);
 
         var isTokenValid = tokenRepository.findByToken(jwt)

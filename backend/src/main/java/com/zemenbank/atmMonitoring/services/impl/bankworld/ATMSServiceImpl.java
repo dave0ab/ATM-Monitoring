@@ -517,7 +517,7 @@ public class ATMSServiceImpl extends BaseServices implements AtmsService {
             String atmIP = "";
             String pingStatus = pingStatusEntity != null ? pingStatusEntity.getSTATUS() : "UNKNOWN";
             Optional<AtmMonitorStatus> atmMonitorStatusopt= monitorStatusRepository.findByTerminalId(atms.getAtmId());
-            AtmMonitorStatus atmMonitorStatus =atmMonitorStatusopt.get();
+            String remark = atmMonitorStatusopt.map(AtmMonitorStatus::getRemark).orElse("");
 
             AtmLocation atmLocation = (AtmLocation) atmLocationRepository.findByTId(terminalId);
 
@@ -536,7 +536,7 @@ public class ATMSServiceImpl extends BaseServices implements AtmsService {
 
             String mapsLink = String.format("https://www.google.com/maps?q=%s,%s", latitude, longitude +"&output=embed");
 
-            return mapAtmsToResponse(atms, pingStatus, atmIP , mapsLink , cashAdd ,cashLeft , atmMonitorStatus.getRemark());
+            return mapAtmsToResponse(atms, pingStatus, atmIP , mapsLink , cashAdd ,cashLeft , remark);
         }
 
 
@@ -549,7 +549,7 @@ public class ATMSServiceImpl extends BaseServices implements AtmsService {
         ATM_CASH atm_CASH = aTMCashRepository.findFirstByAtmId(atms.getAtmId());
         PingStatus pingStatusEntity = pingStatusRepository.findByTerminalId(atms.getAtmId());
         Optional<AtmMonitorStatus> atmMonitorStatusopt= monitorStatusRepository.findByTerminalId(atms.getAtmId());
-        AtmMonitorStatus atmMonitorStatus =atmMonitorStatusopt.get();
+        String remark = atmMonitorStatusopt.map(AtmMonitorStatus::getRemark).orElse("");
         String atmIP = "";
         String cashAdd = atm_CASH != null ? atm_CASH.getCadd().toString() : null;
         String cashLeft = atm_CASH != null ? atm_CASH.getCleft().toString(): null;
@@ -572,7 +572,7 @@ public class ATMSServiceImpl extends BaseServices implements AtmsService {
         String longitude = atmLocation.getLO();
         String mapsLink = String.format("https://www.google.com/maps?q=%s,%s&output=embed", latitude, longitude);
 
-        return mapAtmsToResponse(atms, pingStatus, atmIP, mapsLink, cashAdd ,cashLeft , atmMonitorStatus.getRemark());
+        return mapAtmsToResponse(atms, pingStatus, atmIP, mapsLink, cashAdd ,cashLeft , remark);
     }
 
 

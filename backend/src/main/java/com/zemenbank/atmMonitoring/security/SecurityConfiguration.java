@@ -37,6 +37,7 @@ public class SecurityConfiguration {
 
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final ApiTokenAuthenticationFilter apiTokenAuthFilter;
     private final AuthenticationProvider authenticationProvider;
     private final LogoutHandler logoutHandler;
     private final EntryPointUnauthorizedHandler unauthorizedHandler;
@@ -59,13 +60,15 @@ public class SecurityConfiguration {
                                         antMatcher("/swagger-ui.html"),
                                         antMatcher("/swagger-ui/**"),
                                         antMatcher("/v1/auth/authenticate"),
-                                       // antMatcher("/v1/SmartBranch/**"),
                                         antMatcher("/v1/atms/document/downloadFile/**")
 
 
 
 
                                 ).permitAll()
+                                .requestMatchers(
+                                        antMatcher("/v1/SmartBranch/**")
+                                ).hasRole("SMARTBRANCH")
                 .requestMatchers(
                                                 antMatcher("/v1/acquired/**"),
                                                 antMatcher("/v1/atms/**"),
@@ -76,7 +79,8 @@ public class SecurityConfiguration {
                 .exceptionHandling(httpSecurityExceptionHandlingConfigurer -> httpSecurityExceptionHandlingConfigurer.authenticationEntryPoint(this.unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(apiTokenAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtAuthFilter, ApiTokenAuthenticationFilter.class)
                 .logout(logout ->
                         logout.logoutUrl("/api/v1/auth/logout")
                                 .addLogoutHandler(logoutHandler)
